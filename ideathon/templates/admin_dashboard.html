@@ -615,12 +615,12 @@
             // Update action buttons
             const actionButtons = document.getElementById('actionButtons');
             actionButtons.innerHTML = `
-                <a href="{{ url_for('handle_claim', claim_id='') }}${claimId}/approve" 
+                <a href="/admin/handle_claim/${claimId}/approve" 
                    class="btn btn-success"
                    onclick="return confirm('Are you sure you want to approve this claim?')">
                     <i class="fas fa-check"></i> Approve Claim
                 </a>
-                <a href="{{ url_for('handle_claim', claim_id='') }}${claimId}/reject" 
+                <a href="/admin/handle_claim/${claimId}/reject" 
                    class="btn btn-danger"
                    onclick="return confirm('Are you sure you want to reject this claim?')">
                     <i class="fas fa-times"></i> Reject Claim
