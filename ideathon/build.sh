@@ -7,5 +7,5 @@ pip install -r requirements.txt
 # Initialize database and run migrations
 flask db upgrade
 
-# Create admin user if it doesn't exist
-python create_admin.py
+# Initialize admin user
+python init_data.py
