@@ -510,7 +510,15 @@
                                         </td>
                                         <td>
                                             {% if claim.status == 'pending' %}
-                                            <button type="button" class="btn btn-sm btn-info me-1" onclick="showVerificationDetails('{{ item.name }}', '{{ claim.user.name }}', '{{ item.location }}', '{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}', {{ item.verification_questions|tojson }}, {{ claim.answers|tojson if claim.answers else '[]' }}, '{{ claim.id }}')">
+                                            <button type="button" class="btn btn-sm btn-info me-1" onclick="showVerificationDetails(
+                                                '{{ item.name }}', 
+                                                '{{ claim.user.name }}', 
+                                                '{{ item.location }}', 
+                                                '{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}', 
+                                                {{ item.verification_questions|tojson|safe }}, 
+                                                {{ claim.answers|tojson|safe if claim.answers else '[]' }}, 
+                                                {{ claim.id }}
+                                            )">
                                                 <i class="fas fa-eye"></i> View Answers
                                             </button>
                                             {% endif %}
@@ -573,6 +581,8 @@
 
     <script>
         function showVerificationDetails(itemName, claimerName, location, claimDate, questions, answers, claimId) {
+            console.log('Showing details for:', {itemName, claimerName, location, claimDate, questions, answers, claimId});
+            
             // Update item and claimer information
             document.getElementById('itemName').textContent = itemName;
             document.getElementById('claimerName').textContent = claimerName;
@@ -583,30 +593,34 @@
             const qaList = document.getElementById('qaList');
             qaList.innerHTML = '';
 
-            questions.forEach((question, index) => {
-                const answer = answers[index] || 'No answer provided';
-                const qaDiv = document.createElement('div');
-                qaDiv.className = 'qa-pair';
-                qaDiv.innerHTML = `
-                    <div class="question">
-                        <strong>Q: ${question}</strong>
-                    </div>
-                    <div class="answer">
-                        <em>A: ${answer}</em>
-                    </div>
-                `;
-                qaList.appendChild(qaDiv);
-            });
+            if (questions && questions.length > 0) {
+                questions.forEach((question, index) => {
+                    const answer = answers[index] || 'No answer provided';
+                    const qaDiv = document.createElement('div');
+                    qaDiv.className = 'qa-pair';
+                    qaDiv.innerHTML = `
+                        <div class="question">
+                            <strong>Q: ${question}</strong>
+                        </div>
+                        <div class="answer">
+                            <em>A: ${answer}</em>
+                        </div>
+                    `;
+                    qaList.appendChild(qaDiv);
+                });
+            } else {
+                qaList.innerHTML = '<p class="text-muted">No verification questions were set for this item.</p>';
+            }
 
             // Update action buttons
             const actionButtons = document.getElementById('actionButtons');
             actionButtons.innerHTML = `
-                <a href="/admin/handle_claim/${claimId}/approve" 
+                <a href="{{ url_for('handle_claim', claim_id='') }}${claimId}/approve" 
                    class="btn btn-success"
                    onclick="return confirm('Are you sure you want to approve this claim?')">
                     <i class="fas fa-check"></i> Approve Claim
                 </a>
-                <a href="/admin/handle_claim/${claimId}/reject" 
+                <a href="{{ url_for('handle_claim', claim_id='') }}${claimId}/reject" 
                    class="btn btn-danger"
                    onclick="return confirm('Are you sure you want to reject this claim?')">
                     <i class="fas fa-times"></i> Reject Claim
@@ -614,10 +628,11 @@
             `;
 
             // Show the verification details container
-            document.getElementById('verificationDetails').style.display = 'block';
+            const detailsContainer = document.getElementById('verificationDetails');
+            detailsContainer.style.display = 'block';
 
             // Scroll to the verification details
-            document.getElementById('verificationDetails').scrollIntoView({ behavior: 'smooth' });
+            detailsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     </script>
 </body>
