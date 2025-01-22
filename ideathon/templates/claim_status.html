@@ -301,52 +301,52 @@
                         </tr>
 
                         <!-- Modal for claim details -->
-                        <div class="modal fade" id="claimModal{{ claim.id }}" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Claim Details - {{ claim.item.name }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <h6>Item Details:</h6>
-                                        <p><strong>Description:</strong> {{ claim.item.description }}</p>
-                                        <p><strong>Location Found:</strong> {{ claim.item.location }}</p>
-                                        <p><strong>Found Date:</strong> {{ claim.item.found_date.strftime('%Y-%m-%d') }}</p>
-                                        
-                                        <h6 class="mt-3">Your Answers:</h6>
-                                        {% set answers = claim.answers|from_json %}
-                                        {% set questions = claim.item.verification_questions|from_json %}
-                                        {% for question in questions %}
-                                            <div class="card mb-2">
-                                                <div class="card-header bg-light">
-                                                    <strong>Q: {{ question }}</strong>
-                                                </div>
-                                                <div class="card-body">
-                                                    <p class="mb-0">A: {{ answers[loop.index0] }}</p>
-                                                </div>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        {% if claim.status == 'pending' %}
-                                        <a href="{{ url_for('cancel_claim', claim_id=claim.id) }}" class="btn btn-action cancel"
-                                           onclick="return confirm('Are you sure you want to cancel this claim?')">
-                                            <i class="fas fa-times-circle me-1"></i>Cancel Claim
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
+                        
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-
+    <div class="modal fade" id="claimModal{{ claim.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Claim Details - {{ claim.item.name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Item Details:</h6>
+                    <p><strong>Description:</strong> {{ claim.item.description }}</p>
+                    <p><strong>Location Found:</strong> {{ claim.item.location }}</p>
+                    <p><strong>Found Date:</strong> {{ claim.item.found_date.strftime('%Y-%m-%d') }}</p>
+                    
+                    <h6 class="mt-3">Your Answers:</h6>
+                    {% set answers = claim.answers|from_json %}
+                    {% set questions = claim.item.verification_questions|from_json %}
+                    {% for question in questions %}
+                        <div class="card mb-2">
+                            <div class="card-header bg-light">
+                                <strong>Q: {{ question }}</strong>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">A: {{ answers[loop.index0] }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    {% if claim.status == 'pending' %}
+                    <a href="{{ url_for('cancel_claim', claim_id=claim.id) }}" class="btn btn-action cancel"
+                       onclick="return confirm('Are you sure you want to cancel this claim?')">
+                        <i class="fas fa-times-circle me-1"></i>Cancel Claim
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
     <div class="back-button-container">
         <a href="{{ url_for('home') }}" class="back-button">
             <i class="fas fa-arrow-left"></i>
