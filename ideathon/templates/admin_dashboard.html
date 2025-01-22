@@ -469,52 +469,56 @@
                     <p><strong>Description:</strong> {{ item.description }}</p>
                     
                     <!-- Claims Section -->
-                    <div class="claims-section mt-3">
-                        <h4>Claims ({{ item.claims|selectattr('status', 'equalto', 'pending')|list|length }} pending)</h4>
-                        {% if item.claims %}
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Claimer</th>
-                                        <th>Item</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for claim in item.claims %}
-                                    <tr>
-                                        <td>{{ claim.user.name }}</td>
-                                        <td>{{ item.name }}</td>
-                                        <td>{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                                        <td>
-                                            <span class="badge bg-{{ 'warning' if claim.status == 'pending' else 'success' if claim.status == 'approved' else 'danger' }}">
-                                                {{ claim.status }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {% if claim.status == 'pending' %}
-                                            <button type="button" class="btn btn-sm btn-info me-1" onclick="showVerificationDetails(
-                                                '{{ item.name }}', 
-                                                '{{ claim.user.name }}', 
-                                                '{{ item.location }}', 
-                                                '{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}', 
-                                                {{ item.verification_questions|from_json|tojson|safe if item.verification_questions else '[]' }}, 
-                                                {{ claim.answers|from_json|tojson|safe if claim.answers else '[]' }}, 
-                                                {{ claim.id }}
-                                            )">
-                                                <i class="fas fa-eye"></i> View Answers
-                                            </button>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        {% else %}
-                            <p class="text-muted">No claims yet</p>
-                        {% endif %}
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Recent Claims</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Claimer</th>
+                                                <th>Item</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for claim in item.claims %}
+                                            <tr>
+                                                <td>{{ claim.user.name }}</td>
+                                                <td>{{ claim.item.name }}</td>
+                                                <td>{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ 'warning' if claim.status == 'pending' else 'success' if claim.status == 'approved' else 'danger' }}">
+                                                        {{ claim.status }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if claim.status == 'pending' %}
+                                                    <button type="button" class="btn btn-sm btn-info me-1" onclick="showVerificationDetails(
+                                                        '{{ claim.item.name }}', 
+                                                        '{{ claim.user.name }}', 
+                                                        '{{ claim.item.location }}', 
+                                                        '{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}', 
+                                                        {{ claim.item.verification_questions|from_json|tojson|safe if claim.item.verification_questions else '[]' }}, 
+                                                        {{ claim.answers|from_json|tojson|safe if claim.answers else '[]' }}, 
+                                                        {{ claim.id }}
+                                                    )">
+                                                        <i class="fas fa-eye"></i> View Answers
+                                                    </button>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card-footer">
@@ -624,17 +628,24 @@
 
                 // Show the modal
                 const modal = document.getElementById('verificationModal');
-                modal.style.display = 'block';
-                document.body.style.overflow = 'hidden'; // Prevent scrolling of background
+                if (modal) {
+                    modal.style.display = 'block';
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling of background
+                } else {
+                    console.error('Modal element not found');
+                }
             } catch (error) {
                 console.error('Error showing verification details:', error);
+                alert('Error showing verification details. Please check the console for more information.');
             }
         }
 
         function closeVerificationModal() {
             const modal = document.getElementById('verificationModal');
-            modal.style.display = 'none';
-            document.body.style.overflow = ''; // Restore scrolling
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = ''; // Restore scrolling
+            }
         }
 
         // Close modal when clicking outside
