@@ -398,6 +398,18 @@
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <div class="d-flex gap-2">
+                                                                <a href="{{ url_for('handle_claim', claim_id=claim.id, action='approve') }}" 
+                                                                   class="btn btn-success"
+                                                                   onclick="return confirm('Are you sure you want to approve this claim?')">
+                                                                    <i class="fas fa-check"></i> Approve
+                                                                </a>
+                                                                <a href="{{ url_for('handle_claim', claim_id=claim.id, action='reject') }}" 
+                                                                   class="btn btn-danger"
+                                                                   onclick="return confirm('Are you sure you want to reject this claim?')">
+                                                                    <i class="fas fa-times"></i> Reject
+                                                                </a>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
