@@ -328,6 +328,94 @@
         .dashboard-button:hover i {
             transform: translateX(-5px);
         }
+
+        /* Verification Details Container */
+        .verification-details {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            padding: 2rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .verification-details h4 {
+            color: #1a2234;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .verification-details .item-info {
+            background: #f8fafc;
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .verification-details .qa-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .verification-qa .qa-pair {
+            background: #ffffff;
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .verification-qa .qa-pair:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .verification-qa .question {
+            color: #1a2234;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .verification-qa .answer {
+            color: #64748b;
+            padding-left: 1.25rem;
+            border-left: 3px solid #3b82f6;
+            font-size: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .action-buttons .btn {
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .action-buttons .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .action-buttons .btn-success {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .action-buttons .btn-danger {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
     </style>
 </head>
 <body>
@@ -422,75 +510,9 @@
                                         </td>
                                         <td>
                                             {% if claim.status == 'pending' %}
-                                            <button type="button" class="btn btn-sm btn-info me-1" data-bs-toggle="modal" data-bs-target="#answerModal{{ claim.id }}">
+                                            <button type="button" class="btn btn-sm btn-info me-1" onclick="showVerificationDetails('{{ item.name }}', '{{ claim.user.name }}', '{{ item.location }}', '{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}', {{ item.verification_questions|tojson }}, {{ claim.answers|tojson if claim.answers else '[]' }}, '{{ claim.id }}')">
                                                 <i class="fas fa-eye"></i> View Answers
                                             </button>
-                                            
-                                            <!-- Modal for answers -->
-                                            <div class="modal fade text-dark" id="answerModal{{ claim.id }}" tabindex="-1" aria-labelledby="answerModalLabel{{ claim.id }}" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content bg-white">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title" id="answerModalLabel{{ claim.id }}">Claim Verification Details</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <div class="mb-3">
-                                                                <h6 class="text-dark">Item: {{ item.name }}</h6>
-                                                                <p class="text-muted">Claimed by: {{ claim.user.name }}</p>
-                                                                <p class="text-muted">Location: {{ item.location }}</p>
-                                                                <p class="text-muted">Claim Date: {{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}</p>
-                                                            </div>
-                                                            <hr>
-                                                            <div class="verification-qa">
-                                                                <h6 class="mb-3 text-dark">Verification Questions & Answers:</h6>
-                                                                {% if item.verification_questions %}
-                                                                    {% set questions = item.verification_questions|from_json %}
-                                                                    {% set answers = claim.answers|from_json if claim.answers else [] %}
-                                                                    {% for q in questions %}
-                                                                        <div class="qa-pair mb-3">
-                                                                            <div class="question text-dark">
-                                                                                <strong>Q: {{ q }}</strong>
-                                                                            </div>
-                                                                            <div class="answer mt-2 text-muted">
-                                                                                <em>A: {{ answers[loop.index0] if answers and loop.index0 < answers|length else 'No answer provided' }}</em>
-                                                                            </div>
-                                                                        </div>
-                                                                    {% endfor %}
-                                                                {% else %}
-                                                                    <p class="text-muted">No verification questions were set for this item.</p>
-                                                                {% endif %}
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                            <div class="d-flex gap-2">
-                                                                <a href="{{ url_for('handle_claim', claim_id=claim.id, action='approve') }}" 
-                                                                   class="btn btn-success"
-                                                                   onclick="return confirm('Are you sure you want to approve this claim?')">
-                                                                    <i class="fas fa-check"></i> Approve
-                                                                </a>
-                                                                <a href="{{ url_for('handle_claim', claim_id=claim.id, action='reject') }}" 
-                                                                   class="btn btn-danger"
-                                                                   onclick="return confirm('Are you sure you want to reject this claim?')">
-                                                                    <i class="fas fa-times"></i> Reject
-                                                                </a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <a href="{{ url_for('handle_claim', claim_id=claim.id, action='approve') }}" 
-                                               class="btn btn-sm btn-success me-1" 
-                                               onclick="return confirm('Are you sure you want to approve this claim?')">
-                                                <i class="fas fa-check"></i> Approve
-                                            </a>
-                                            <a href="{{ url_for('handle_claim', claim_id=claim.id, action='reject') }}" 
-                                               class="btn btn-sm btn-danger"
-                                               onclick="return confirm('Are you sure you want to reject this claim?')">
-                                                <i class="fas fa-times"></i> Reject
-                                            </a>
                                             {% endif %}
                                         </td>
                                     </tr>
@@ -514,6 +536,34 @@
         </div>
     </div>
 
+    <!-- Verification Details Container -->
+    <div class="container verification-details" id="verificationDetails" style="display: none;">
+        <h4>Claim Verification Details</h4>
+        
+        <div class="item-info">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Item:</strong> <span id="itemName"></span></p>
+                    <p><strong>Location:</strong> <span id="itemLocation"></span></p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Claimed by:</strong> <span id="claimerName"></span></p>
+                    <p><strong>Claim Date:</strong> <span id="claimDate"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="verification-qa">
+            <div class="qa-list" id="qaList">
+                <!-- Q&A pairs will be inserted here -->
+            </div>
+        </div>
+
+        <div class="action-buttons" id="actionButtons">
+            <!-- Action buttons will be inserted here -->
+        </div>
+    </div>
+
     <div class="button-container">
         <button onclick="window.location.href='{{ url_for('home') }}'" class="dashboard-button">
             <i class="fas fa-arrow-left"></i>
@@ -521,5 +571,54 @@
         </button>
     </div>
 
+    <script>
+        function showVerificationDetails(itemName, claimerName, location, claimDate, questions, answers, claimId) {
+            // Update item and claimer information
+            document.getElementById('itemName').textContent = itemName;
+            document.getElementById('claimerName').textContent = claimerName;
+            document.getElementById('itemLocation').textContent = location;
+            document.getElementById('claimDate').textContent = claimDate;
+
+            // Clear and update Q&A list
+            const qaList = document.getElementById('qaList');
+            qaList.innerHTML = '';
+
+            questions.forEach((question, index) => {
+                const answer = answers[index] || 'No answer provided';
+                const qaDiv = document.createElement('div');
+                qaDiv.className = 'qa-pair';
+                qaDiv.innerHTML = `
+                    <div class="question">
+                        <strong>Q: ${question}</strong>
+                    </div>
+                    <div class="answer">
+                        <em>A: ${answer}</em>
+                    </div>
+                `;
+                qaList.appendChild(qaDiv);
+            });
+
+            // Update action buttons
+            const actionButtons = document.getElementById('actionButtons');
+            actionButtons.innerHTML = `
+                <a href="/admin/handle_claim/${claimId}/approve" 
+                   class="btn btn-success"
+                   onclick="return confirm('Are you sure you want to approve this claim?')">
+                    <i class="fas fa-check"></i> Approve Claim
+                </a>
+                <a href="/admin/handle_claim/${claimId}/reject" 
+                   class="btn btn-danger"
+                   onclick="return confirm('Are you sure you want to reject this claim?')">
+                    <i class="fas fa-times"></i> Reject Claim
+                </a>
+            `;
+
+            // Show the verification details container
+            document.getElementById('verificationDetails').style.display = 'block';
+
+            // Scroll to the verification details
+            document.getElementById('verificationDetails').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
 </body>
 </html>
