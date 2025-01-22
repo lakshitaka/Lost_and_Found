@@ -1,0 +1,201 @@
+/* Add Item Page Styles */
+.add-item-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.add-item-header {
+    margin-bottom: 30px;
+}
+
+.add-item-title {
+    font-size: 1.75rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.add-item-subtitle {
+    color: #666;
+    font-size: 1rem;
+}
+
+.add-item-form {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+
+.form-section {
+    margin-bottom: 30px;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 8px;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    border-color: #1976d2;
+    outline: none;
+}
+
+.helper-text {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Verification Questions Section */
+.questions-container {
+    margin-top: 20px;
+}
+
+.question-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.question-input {
+    flex: 1;
+}
+
+.btn-remove-question {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-remove-question:hover {
+    background: #d32f2f;
+}
+
+.btn-add-question {
+    background: none;
+    border: 1px dashed #1976d2;
+    color: #1976d2;
+    padding: 12px;
+    border-radius: 4px;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+}
+
+.btn-add-question:hover {
+    background: #f5f5f5;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.btn-cancel {
+    background: none;
+    border: 1px solid #666;
+    color: #666;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: #f5f5f5;
+}
+
+.btn-submit {
+    background: #1976d2;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-submit:hover {
+    background: #1565c0;
+}
+
+/* Validation Styles */
+.form-input.error,
+.form-textarea.error {
+    border-color: #f44336;
+}
+
+.error-message {
+    color: #f44336;
+    font-size: 0.875rem;
+    margin-top: 4px;
+}
+
+/* Loading State */
+.btn-submit.loading {
+    background: #90caf9;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .add-item-container {
+        padding: 15px;
+    }
+    
+    .add-item-form {
+        padding: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-cancel,
+    .btn-submit {
+        width: 100%;
+    }
+}

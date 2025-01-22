@@ -1,0 +1,185 @@
+/* Claim Status Page Styles */
+.status-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.status-header {
+    margin-bottom: 30px;
+}
+
+.status-title {
+    font-size: 1.75rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.status-subtitle {
+    color: #666;
+    font-size: 1rem;
+}
+
+.claims-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.claim-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    transition: transform 0.2s;
+}
+
+.claim-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.claim-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 15px;
+}
+
+.claim-item-name {
+    font-size: 1.25rem;
+    color: #333;
+    margin: 0;
+}
+
+.claim-status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-pending {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.status-approved {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-rejected {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.claim-details {
+    margin-bottom: 15px;
+}
+
+.claim-date {
+    color: #666;
+    font-size: 0.875rem;
+    margin-bottom: 10px;
+}
+
+.claim-answers {
+    margin-top: 15px;
+}
+
+.answer-group {
+    margin-bottom: 10px;
+}
+
+.question-text {
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 4px;
+}
+
+.answer-text {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.claim-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-cancel-claim {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-cancel-claim:hover {
+    background: #d32f2f;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: #bdbdbd;
+    margin-bottom: 20px;
+}
+
+.empty-message {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+/* Filters */
+.status-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filter-button {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-button.active {
+    background: #1976d2;
+    color: white;
+    border-color: #1976d2;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .claims-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .status-filters {
+        flex-wrap: wrap;
+    }
+    
+    .filter-button {
+        flex: 1;
+        min-width: 100px;
+    }
+}

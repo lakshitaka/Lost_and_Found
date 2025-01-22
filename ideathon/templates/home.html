@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .mouse-particle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: #fff;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .glowing-orb {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #fff;
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .magnetic-button {
+            position: relative;
+            transition: transform 0.1s;
+        }
+        .matrix-column {
+            position: absolute;
+            font-size: 16px;
+            font-family: monospace;
+            color: #0f0;
+            animation: matrix-rain 3s linear infinite;
+        }
+        .dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #fff;
+            animation: dot-pulse 2s infinite;
+        }
+        .char {
+            display: inline-block;
+            animation: text-anim 2s infinite;
+            animation-delay: calc(var(--char-index) * 0.1s);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#footer" onclick="scrollToFooter(event)">Lost & Found</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'admin' %}
+                            <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+                        {% else %}
+                            <a class="nav-link" href="{{ url_for('claim_status') }}">My Claims</a>
+                        {% endif %}
+                        <span class="nav-link text-light">{{ current_user.name }}</span>
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    {% else %}
+                        <a class="nav-link" href="{{ url_for('login') }}">Student Login</a>
+                        <a class="nav-link" href="{{ url_for('admin_login') }}">Admin Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section" id="heroSection">
+        <div class="matrix-rain" id="matrixRain"></div>
+        <div class="interactive-dots" id="interactiveDots"></div>
+        <div class="container text-center">
+            <h1 class="hero-title" id="heroTitle">Find What's Lost<br>Return What's Found</h1>
+            <p class="hero-subtitle">A secure and efficient way to manage lost and found items in our campus</p>
+            {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('login') }}" class="magnetic-button">Get Started</a>
+            {% endif %}
+        </div>
+        <div class="glowing-orb"></div>
+    </div>
+
+    <div class="container mb-5">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="items-container">
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                {% for item in items %}
+                <div class="col">
+                    <div class="card h-100 {% if item.status == 'claimed' %}claimed-item{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">{{ item.name }}</h5>
+                                <span class="badge bg-{{ 'success' if item.status == 'claimed' else 'secondary' }}">
+                                    {{ item.status }}
+                                </span>
+                            </div>
+                            <p class="card-text"><strong>Location:</strong> {{ item.location }}</p>
+                            <p class="card-text"><strong>Found Date:</strong> {{ item.found_date.strftime('%Y-%m-%d') }}</p>
+                            <p class="card-text">{{ item.description }}</p>
+                            
+                            {% if current_user.is_authenticated and current_user.role != 'admin' %}
+                                {% set has_pending_claim = current_user.claims|selectattr('item_id', 'equalto', item.id)|selectattr('status', 'equalto', 'pending')|list|length > 0 %}
+                                
+                                {% if item.status != 'claimed' and not has_pending_claim %}
+                                    <button type="button" 
+                                            class="btn btn-primary btn-claim w-100" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#claimModal{{ item.id }}">
+                                        <i class="fas fa-hand-holding me-2"></i>Claim Item
+                                    </button>
+                                {% elif has_pending_claim %}
+                                    <button class="btn btn-warning btn-claim w-100" disabled>
+                                        <i class="fas fa-clock me-2"></i>Claim Pending
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-secondary btn-claim w-100" disabled>
+                                        <i class="fas fa-check-circle me-2"></i>Claimed
+                                    </button>
+                                {% endif %}
+                            {% else %}
+                                <button type="button" 
+                                        class="btn btn-primary btn-claim w-100" 
+                                        onclick="window.location.href='{{ url_for('login') }}'">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login to Claim
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.is_authenticated and current_user.role != 'admin' %}
+        {% for item in items %}
+            {% set has_pending_claim = current_user.claims|selectattr('item_id', 'equalto', item.id)|selectattr('status', 'equalto', 'pending')|list|length > 0 %}
+            {% if item.status != 'claimed' and not has_pending_claim %}
+                <div class="modal fade" id="claimModal{{ item.id }}" tabindex="-1" aria-labelledby="claimModalLabel{{ item.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="claimModalLabel{{ item.id }}">Claim Item: {{ item.name }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="{{ url_for('claim_item', item_id=item.id) }}" method="POST">
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <h6>Item Details:</h6>
+                                        <p><strong>Description:</strong> {{ item.description }}</p>
+                                        <p><strong>Location Found:</strong> {{ item.location }}</p>
+                                        <p><strong>Found Date:</strong> {{ item.found_date.strftime('%Y-%m-%d') }}</p>
+                                    </div>
+
+                                    {% if item.verification_questions %}
+                                        <hr>
+                                        <div class="verification-questions">
+                                            <h6 class="mb-3">Please answer these questions to verify your ownership:</h6>
+                                            {% set questions = item.verification_questions|from_json %}
+                                            {% for question in questions %}
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="answer_{{ item.id }}_{{ loop.index0 }}">{{ question }}</label>
+                                                    <input type="text" 
+                                                           class="form-control" 
+                                                           id="answer_{{ item.id }}_{{ loop.index0 }}"
+                                                           name="answer_{{ loop.index0 }}" 
+                                                           required 
+                                                           placeholder="Your answer">
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Submit Claim</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+    
+    <!-- Footer -->
+    <footer class="footer" id="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h3>About Lost & Found</h3>
+                    <p>Our Lost & Found portal at Kongu Engineering College helps students and staff efficiently manage lost and found items within the campus. We aim to reunite people with their lost belongings through a secure and organized system.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="fas fa-angle-right"></i> How It Works</a></li>
+                        <li><a href="{{ url_for('claim_status') }}"><i class="fas fa-angle-right"></i> Check Claim Status</a></li>
+                        <li><a href="{{ url_for('login') }}"><i class="fas fa-angle-right"></i> Student Login</a></li>
+                        <li><a href="{{ url_for('admin_login') }}"><i class="fas fa-angle-right"></i> Admin Portal</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3>Contact Information</h3>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Kongu Engineering College<br>Perundurai, Erode - 638060</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-phone"></i>
+                            <span>+91 XXXXX XXXXX</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <span>support@lostandfound.kongu.edu</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p>&copy; 2025 KEC Lost & Found Portal. All rights reserved.</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="social-links">
+                            <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all modals
+            var modals = document.querySelectorAll('.modal');
+            modals.forEach(function(modal) {
+                modal.addEventListener('show.bs.modal', function() {
+                    document.body.classList.add('modal-open');
+                });
+                modal.addEventListener('hidden.bs.modal', function() {
+                    document.body.classList.remove('modal-open');
+                });
+            });
+
+            // Matrix Rain Effect
+            const matrixRain = document.getElementById('matrixRain');
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            
+            function createMatrixColumn() {
+                const column = document.createElement('div');
+                column.className = 'matrix-column';
+                column.style.left = Math.random() * 100 + '%';
+                column.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                
+                const length = Math.floor(Math.random() * 20 + 10);
+                for(let i = 0; i < length; i++) {
+                    const char = chars[Math.floor(Math.random() * chars.length)];
+                    column.innerHTML += char + '<br>';
+                }
+                
+                matrixRain.appendChild(column);
+                setTimeout(() => column.remove(), 3000);
+            }
+
+            setInterval(createMatrixColumn, 100);
+
+            // Interactive Dots Effect
+            const dotsContainer = document.getElementById('interactiveDots');
+            const heroSection = document.getElementById('heroSection');
+            const dots = [];
+            const numDots = 50;
+
+            for(let i = 0; i < numDots; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.style.left = Math.random() * 100 + '%';
+                dot.style.top = Math.random() * 100 + '%';
+                dot.style.animationDelay = (Math.random() * 2) + 's';
+                dotsContainer.appendChild(dot);
+                dots.push(dot);
+            }
+
+            heroSection.addEventListener('mousemove', (e) => {
+                const rect = heroSection.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                
+                heroSection.style.setProperty('--mouse-x', `${x}%`);
+                heroSection.style.setProperty('--mouse-y', `${y}%`);
+
+                dots.forEach(dot => {
+                    const dotRect = dot.getBoundingClientRect();
+                    const dotX = (dotRect.left + dotRect.width/2 - rect.left) / rect.width * 100;
+                    const dotY = (dotRect.top + dotRect.height/2 - rect.top) / rect.height * 100;
+                    
+                    const distance = Math.sqrt(Math.pow(x - dotX, 2) + Math.pow(y - dotY, 2));
+                    if(distance < 20) {
+                        const angle = Math.atan2(y - dotY, x - dotX);
+                        const newX = dotX - Math.cos(angle) * 5;
+                        const newY = dotY - Math.sin(angle) * 5;
+                        dot.style.left = `${newX}%`;
+                        dot.style.top = `${newY}%`;
+                    }
+                });
+            });
+
+            // Text Animation
+            const heroTitle = document.getElementById('heroTitle');
+            if(heroTitle) {
+                const text = heroTitle.innerHTML;
+                const chars = text.split('');
+                heroTitle.innerHTML = chars.map((char, index) => 
+                    char === '<br>' ? '<br>' : 
+                    `<span class="char" style="--char-index: ${index}">${char}</span>`
+                ).join('');
+            }
+
+            // Hero section interactive effects
+            const heroTitle = document.querySelector('.hero-title');
+            const magneticButton = document.querySelector('.magnetic-button');
+            const glowingOrb = document.querySelector('.glowing-orb');
+            
+            if (heroTitle) {
+                const words = heroTitle.innerHTML.split('<br>');
+                heroTitle.innerHTML = words.map(word => 
+                    `<span>${word}</span>`
+                ).join('<br>');
+            }
+
+            // Mouse move effects
+            if (heroSection) {
+                heroSection.addEventListener('mousemove', (e) => {
+                    const rect = heroSection.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+                    
+                    heroSection.style.setProperty('--mouse-x', `${x}%`);
+                    heroSection.style.setProperty('--mouse-y', `${y}%`);
+
+                    // 3D tilt effect
+                    const rotateX = (y - 50) * 0.1;
+                    const rotateY = (x - 50) * 0.1;
+                    heroTitle.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
+                    
+                    // Update glowing orb position
+                    if (glowingOrb) {
+                        glowingOrb.style.opacity = '1';
+                        glowingOrb.style.transform = `translate(${e.clientX - rect.left - 75}px, ${e.clientY - rect.top - 75}px)`;
+                    }
+                });
+
+                heroSection.addEventListener('mouseleave', () => {
+                    heroTitle.style.transform = 'rotateX(0) rotateY(0)';
+                    if (glowingOrb) {
+                        glowingOrb.style.opacity = '0';
+                    }
+                });
+            }
+
+            // Magnetic button effect
+            if (magneticButton) {
+                magneticButton.addEventListener('mousemove', (e) => {
+                    const rect = magneticButton.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    
+                    const strength = 20;
+                    magneticButton.style.transform = `translate(${x / strength}px, ${y / strength}px)`;
+                });
+
+                magneticButton.addEventListener('mouseleave', () => {
+                    magneticButton.style.transform = 'translate(0, 0)';
+                });
+            }
+        });
+
+        function scrollToFooter(event) {
+            event.preventDefault();
+            document.getElementById('footer').scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>
