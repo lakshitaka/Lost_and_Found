@@ -469,56 +469,108 @@
                     <p><strong>Description:</strong> {{ item.description }}</p>
                     
                     <!-- Claims Section -->
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">Recent Claims</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Claimer</th>
-                                                <th>Item</th>
-                                                <th>Date</th>
-                                                <th>Status</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for claim in item.claims %}
-                                            <tr>
-                                                <td>{{ claim.user.name }}</td>
-                                                <td>{{ claim.item.name }}</td>
-                                                <td>{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                                                <td>
-                                                    <span class="badge bg-{{ 'warning' if claim.status == 'pending' else 'success' if claim.status == 'approved' else 'danger' }}">
-                                                        {{ claim.status }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    {% if claim.status == 'pending' %}
-                                                    <button type="button" class="btn btn-sm btn-info me-1" onclick="showVerificationDetails(
-                                                        '{{ claim.item.name }}', 
-                                                        '{{ claim.user.name }}', 
-                                                        '{{ claim.item.location }}', 
-                                                        '{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}', 
-                                                        {{ claim.item.verification_questions|from_json|tojson|safe if claim.item.verification_questions else '[]' }}, 
-                                                        {{ claim.answers|from_json|tojson|safe if claim.answers else '[]' }}, 
-                                                        {{ claim.id }}
-                                                    )">
-                                                        <i class="fas fa-eye"></i> View Answers
-                                                    </button>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="claims-section mt-3">
+                        <h4>Claims ({{ item.claims|selectattr('status', 'equalto', 'pending')|list|length }} pending)</h4>
+                        {% if item.claims %}
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Claimer</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for claim in item.claims %}
+                                    <tr>
+                                        <td>{{ claim.user.name }}</td>
+                                        <td>{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'warning' if claim.status == 'pending' else 'success' if claim.status == 'approved' else 'danger' }}">
+                                                {{ claim.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if claim.status == 'pending' %}
+                                            <button type="button" class="btn btn-sm btn-info me-1" data-bs-toggle="modal" data-bs-target="#answerModal{{ claim.id }}">
+                                                <i class="fas fa-eye"></i> View Answers
+                                            </button>
+                                            
+                                            <!-- Modal for answers -->
+                                            <div class="modal fade text-dark" id="answerModal{{ claim.id }}" tabindex="-1" aria-labelledby="answerModalLabel{{ claim.id }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content bg-white">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="answerModalLabel{{ claim.id }}">Claim Verification Details</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <h6 class="text-dark">Item: {{ item.name }}</h6>
+                                                                <p class="text-muted">Claimed by: {{ claim.user.name }}</p>
+                                                                <p class="text-muted">Location: {{ item.location }}</p>
+                                                                <p class="text-muted">Claim Date: {{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                                                            </div>
+                                                            <hr>
+                                                            <div class="verification-qa">
+                                                                <h6 class="mb-3 text-dark">Verification Questions & Answers:</h6>
+                                                                {% if item.verification_questions %}
+                                                                    {% set questions = item.verification_questions|from_json %}
+                                                                    {% set answers = claim.answers|from_json if claim.answers else [] %}
+                                                                    {% for q in questions %}
+                                                                        <div class="qa-pair mb-3">
+                                                                            <div class="question text-dark">
+                                                                                <strong>Q: {{ q }}</strong>
+                                                                            </div>
+                                                                            <div class="answer mt-2 text-muted">
+                                                                                <em>A: {{ answers[loop.index0] if answers and loop.index0 < answers|length else 'No answer provided' }}</em>
+                                                                            </div>
+                                                                        </div>
+                                                                    {% endfor %}
+                                                                {% else %}
+                                                                    <p class="text-muted">No verification questions were set for this item.</p>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <div class="d-flex gap-2">
+                                                                <a href="{{ url_for('handle_claim', claim_id=claim.id, action='approve') }}" 
+                                                                   class="btn btn-success"
+                                                                   onclick="return confirm('Are you sure you want to approve this claim?')">
+                                                                    <i class="fas fa-check"></i> Approve
+                                                                </a>
+                                                                <a href="{{ url_for('handle_claim', claim_id=claim.id, action='reject') }}" 
+                                                                   class="btn btn-danger"
+                                                                   onclick="return confirm('Are you sure you want to reject this claim?')">
+                                                                    <i class="fas fa-times"></i> Reject
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <a href="{{ url_for('handle_claim', claim_id=claim.id, action='approve') }}" 
+                                               class="btn btn-sm btn-success me-1" 
+                                               onclick="return confirm('Are you sure you want to approve this claim?')">
+                                                <i class="fas fa-check"></i> Approve
+                                            </a>
+                                            <a href="{{ url_for('handle_claim', claim_id=claim.id, action='reject') }}" 
+                                               class="btn btn-sm btn-danger"
+                                               onclick="return confirm('Are you sure you want to reject this claim?')">
+                                                <i class="fas fa-times"></i> Reject
+                                            </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p class="text-muted">No claims yet</p>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-footer">
@@ -533,35 +585,6 @@
         </div>
     </div>
 
-    <!-- Modal for verification details -->
-    <div class="modal-overlay" id="verificationModal">
-        <div class="modal-container">
-            <button class="modal-close" onclick="closeVerificationModal()">×</button>
-            <div class="modal-header">
-                <h4>Claim Verification Details</h4>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Item:</strong> <span id="itemName"></span></p>
-                        <p><strong>Location:</strong> <span id="itemLocation"></span></p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Claimed by:</strong> <span id="claimerName"></span></p>
-                        <p><strong>Claim Date:</strong> <span id="claimDate"></span></p>
-                    </div>
-                </div>
-
-                <div class="qa-list" id="qaList">
-                    <!-- Q&A pairs will be inserted here -->
-                </div>
-            </div>
-            <div class="modal-footer" id="actionButtons">
-                <!-- Action buttons will be inserted here -->
-            </div>
-        </div>
-    </div>
-
     <div class="button-container">
         <button onclick="window.location.href='{{ url_for('home') }}'" class="dashboard-button">
             <i class="fas fa-arrow-left"></i>
@@ -570,95 +593,18 @@
     </div>
 
     <script>
-        function showVerificationDetails(itemName, claimerName, location, claimDate, questions, answers, claimId) {
-            console.log('Showing details for:', {itemName, claimerName, location, claimDate, questions, answers, claimId});
-            
-            try {
-                // Parse questions and answers if they're strings
-                if (typeof questions === 'string') {
-                    questions = JSON.parse(questions);
-                }
-                if (typeof answers === 'string') {
-                    answers = JSON.parse(answers);
-                }
-
-                // Update item and claimer information
-                document.getElementById('itemName').textContent = itemName;
-                document.getElementById('claimerName').textContent = claimerName;
-                document.getElementById('itemLocation').textContent = location;
-                document.getElementById('claimDate').textContent = claimDate;
-
-                // Clear and update Q&A list
-                const qaList = document.getElementById('qaList');
-                qaList.innerHTML = '';
-
-                if (questions && questions.length > 0) {
-                    questions.forEach((question, index) => {
-                        const answer = answers[index] || 'No answer provided';
-                        const qaDiv = document.createElement('div');
-                        qaDiv.className = 'qa-pair';
-                        qaDiv.innerHTML = `
-                            <div class="question">
-                                <strong>Q: ${question}</strong>
-                            </div>
-                            <div class="answer">
-                                <em>A: ${answer}</em>
-                            </div>
-                        `;
-                        qaList.appendChild(qaDiv);
-                    });
-                } else {
-                    qaList.innerHTML = '<p class="text-muted">No verification questions were set for this item.</p>';
-                }
-
-                // Update action buttons
-                const actionButtons = document.getElementById('actionButtons');
-                actionButtons.innerHTML = `
-                    <a href="/admin/handle_claim/${claimId}/approve" 
-                       class="btn btn-success"
-                       onclick="return confirm('Are you sure you want to approve this claim?')">
-                        <i class="fas fa-check"></i> Approve Claim
-                    </a>
-                    <a href="/admin/handle_claim/${claimId}/reject" 
-                       class="btn btn-danger"
-                       onclick="return confirm('Are you sure you want to reject this claim?')">
-                        <i class="fas fa-times"></i> Reject Claim
-                    </a>
-                `;
-
-                // Show the modal
-                const modal = document.getElementById('verificationModal');
-                if (modal) {
-                    modal.style.display = 'block';
-                    document.body.style.overflow = 'hidden'; // Prevent scrolling of background
-                } else {
-                    console.error('Modal element not found');
-                }
-            } catch (error) {
-                console.error('Error showing verification details:', error);
-                alert('Error showing verification details. Please check the console for more information.');
-            }
-        }
-
-        function closeVerificationModal() {
-            const modal = document.getElementById('verificationModal');
-            if (modal) {
-                modal.style.display = 'none';
-                document.body.style.overflow = ''; // Restore scrolling
-            }
-        }
-
         // Close modal when clicking outside
-        document.getElementById('verificationModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeVerificationModal();
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
             }
         });
 
         // Close modal when pressing ESC key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeVerificationModal();
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => modal.style.display = 'none');
             }
         });
     </script>
