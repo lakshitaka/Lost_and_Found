@@ -403,6 +403,7 @@
                                 <thead>
                                     <tr>
                                         <th>Claimer</th>
+                                        <th>Item</th>
                                         <th>Date</th>
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -412,6 +413,7 @@
                                     {% for claim in item.claims %}
                                     <tr>
                                         <td>{{ claim.user.name }}</td>
+                                        <td>{{ item.name }}</td>
                                         <td>{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}</td>
                                         <td>
                                             <span class="badge bg-{{ 'warning' if claim.status == 'pending' else 'success' if claim.status == 'approved' else 'danger' }}">
@@ -436,6 +438,7 @@
                                                             <div class="mb-3">
                                                                 <h6 class="text-dark">Item: {{ item.name }}</h6>
                                                                 <p class="text-muted">Claimed by: {{ claim.user.name }}</p>
+                                                                <p class="text-muted">Location: {{ item.location }}</p>
                                                                 <p class="text-muted">Claim Date: {{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}</p>
                                                             </div>
                                                             <hr>
