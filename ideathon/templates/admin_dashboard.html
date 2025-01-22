@@ -177,17 +177,38 @@
 
         /* Modal Styling */
         .modal-content {
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1a2234;
+            color: #fff;
         }
 
         .modal-header {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid #2d3748;
         }
 
         .modal-footer {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid #2d3748;
+        }
+
+        .verification-qa .qa-pair {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .verification-qa .question {
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .verification-qa .answer {
+            color: #94a3b8;
+            padding-left: 15px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
         }
 
         /* Button Container */
@@ -349,9 +370,8 @@
                                                                             <div class="question">
                                                                                 <strong>Q: {{ q }}</strong>
                                                                             </div>
-                                                                            <div class="answer">
-                                                                                <span class="text-muted">A:</span> 
-                                                                                {{ answers[loop.index0] if answers|length > loop.index0 else 'No answer provided' }}
+                                                                            <div class="answer mt-2">
+                                                                                <em>A: {{ answers[loop.index0] if answers and loop.index0 < answers|length else 'No answer provided' }}</em>
                                                                             </div>
                                                                         </div>
                                                                     {% endfor %}
@@ -362,16 +382,6 @@
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                            <a href="{{ url_for('handle_claim', claim_id=claim.id, action='approve') }}" 
-                                                               class="btn btn-success"
-                                                               onclick="return confirm('Are you sure you want to approve this claim?')">
-                                                                Approve Claim
-                                                            </a>
-                                                            <a href="{{ url_for('handle_claim', claim_id=claim.id, action='reject') }}" 
-                                                               class="btn btn-danger"
-                                                               onclick="return confirm('Are you sure you want to reject this claim?')">
-                                                                Reject Claim
-                                                            </a>
                                                         </div>
                                                     </div>
                                                 </div>
