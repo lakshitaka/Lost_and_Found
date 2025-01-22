@@ -500,8 +500,8 @@
                                                 '{{ claim.user.name }}', 
                                                 '{{ item.location }}', 
                                                 '{{ claim.claim_date.strftime('%Y-%m-%d %H:%M') }}', 
-                                                {{ item.verification_questions|tojson|safe }}, 
-                                                {{ claim.answers|tojson|safe if claim.answers else '[]' }}, 
+                                                {{ item.verification_questions|from_json|tojson|safe if item.verification_questions else '[]' }}, 
+                                                {{ claim.answers|from_json|tojson|safe if claim.answers else '[]' }}, 
                                                 {{ claim.id }}
                                             )">
                                                 <i class="fas fa-eye"></i> View Answers
@@ -569,63 +569,84 @@
         function showVerificationDetails(itemName, claimerName, location, claimDate, questions, answers, claimId) {
             console.log('Showing details for:', {itemName, claimerName, location, claimDate, questions, answers, claimId});
             
-            // Update item and claimer information
-            document.getElementById('itemName').textContent = itemName;
-            document.getElementById('claimerName').textContent = claimerName;
-            document.getElementById('itemLocation').textContent = location;
-            document.getElementById('claimDate').textContent = claimDate;
+            try {
+                // Parse questions and answers if they're strings
+                if (typeof questions === 'string') {
+                    questions = JSON.parse(questions);
+                }
+                if (typeof answers === 'string') {
+                    answers = JSON.parse(answers);
+                }
 
-            // Clear and update Q&A list
-            const qaList = document.getElementById('qaList');
-            qaList.innerHTML = '';
+                // Update item and claimer information
+                document.getElementById('itemName').textContent = itemName;
+                document.getElementById('claimerName').textContent = claimerName;
+                document.getElementById('itemLocation').textContent = location;
+                document.getElementById('claimDate').textContent = claimDate;
 
-            if (questions && questions.length > 0) {
-                questions.forEach((question, index) => {
-                    const answer = answers[index] || 'No answer provided';
-                    const qaDiv = document.createElement('div');
-                    qaDiv.className = 'qa-pair';
-                    qaDiv.innerHTML = `
-                        <div class="question">
-                            <strong>Q: ${question}</strong>
-                        </div>
-                        <div class="answer">
-                            <em>A: ${answer}</em>
-                        </div>
-                    `;
-                    qaList.appendChild(qaDiv);
-                });
-            } else {
-                qaList.innerHTML = '<p class="text-muted">No verification questions were set for this item.</p>';
+                // Clear and update Q&A list
+                const qaList = document.getElementById('qaList');
+                qaList.innerHTML = '';
+
+                if (questions && questions.length > 0) {
+                    questions.forEach((question, index) => {
+                        const answer = answers[index] || 'No answer provided';
+                        const qaDiv = document.createElement('div');
+                        qaDiv.className = 'qa-pair';
+                        qaDiv.innerHTML = `
+                            <div class="question">
+                                <strong>Q: ${question}</strong>
+                            </div>
+                            <div class="answer">
+                                <em>A: ${answer}</em>
+                            </div>
+                        `;
+                        qaList.appendChild(qaDiv);
+                    });
+                } else {
+                    qaList.innerHTML = '<p class="text-muted">No verification questions were set for this item.</p>';
+                }
+
+                // Update action buttons
+                const actionButtons = document.getElementById('actionButtons');
+                actionButtons.innerHTML = `
+                    <a href="/admin/handle_claim/${claimId}/approve" 
+                       class="btn btn-success"
+                       onclick="return confirm('Are you sure you want to approve this claim?')">
+                        <i class="fas fa-check"></i> Approve Claim
+                    </a>
+                    <a href="/admin/handle_claim/${claimId}/reject" 
+                       class="btn btn-danger"
+                       onclick="return confirm('Are you sure you want to reject this claim?')">
+                        <i class="fas fa-times"></i> Reject Claim
+                    </a>
+                `;
+
+                // Show the modal
+                const modal = document.getElementById('verificationModal');
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling of background
+            } catch (error) {
+                console.error('Error showing verification details:', error);
             }
-
-            // Update action buttons
-            const actionButtons = document.getElementById('actionButtons');
-            actionButtons.innerHTML = `
-                <a href="/admin/handle_claim/${claimId}/approve" 
-                   class="btn btn-success"
-                   onclick="return confirm('Are you sure you want to approve this claim?')">
-                    <i class="fas fa-check"></i> Approve Claim
-                </a>
-                <a href="/admin/handle_claim/${claimId}/reject" 
-                   class="btn btn-danger"
-                   onclick="return confirm('Are you sure you want to reject this claim?')">
-                    <i class="fas fa-times"></i> Reject Claim
-                </a>
-            `;
-
-            // Show the modal
-            document.getElementById('verificationModal').style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Prevent scrolling of background
         }
 
         function closeVerificationModal() {
-            document.getElementById('verificationModal').style.display = 'none';
+            const modal = document.getElementById('verificationModal');
+            modal.style.display = 'none';
             document.body.style.overflow = ''; // Restore scrolling
         }
 
         // Close modal when clicking outside
         document.getElementById('verificationModal').addEventListener('click', function(e) {
             if (e.target === this) {
+                closeVerificationModal();
+            }
+        });
+
+        // Close modal when pressing ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
                 closeVerificationModal();
             }
         });
